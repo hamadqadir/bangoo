@@ -50,35 +50,55 @@ class _AudioListScreenState extends State<AudioListScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('Audio Files')),
-      body: isLoading
-          ? Center(child: CircularProgressIndicator())
-          : songs.isEmpty
+      backgroundColor: Colors.black,
+      appBar: AppBar(
+        title: Text('Audio Files'),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(bottom: Radius.circular(20)),
+        ),
+        scrolledUnderElevation: 0.1,
+        backgroundColor: Colors.orange,
+      ),
+      body:
+          isLoading
+              ? Center(child: CircularProgressIndicator())
+              : songs.isEmpty
               ? Center(child: Text("No audio files found"))
               : ListView.builder(
-                  itemCount: songs.length,
-                  itemBuilder: (context, index) {
-                    final song = songs[index];
-                    return ListTile(
-                      title: Text(song.title),
-                      subtitle: Text(song.artist ?? "Unknown Artist"),
+                itemCount: songs.length,
+                itemBuilder: (context, index) {
+                  final song = songs[index];
+                  return Container(
+                    padding: EdgeInsets.all(8.0),
+                    child: ListTile(
+                      title: Text(
+                        song.title,
+                        style: TextStyle(color: Colors.white),
+                      ),
+                      subtitle: Text(
+                        song.artist ?? "Unknown Artist",
+                        style: TextStyle(color: Colors.white70),
+                      ),
                       onTap: () {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (_) => ChangeNotifierProvider(
-                              create: (_) => AudioPlayerProvider(
-                                audioPaths: audioPaths,
-                                currentIndex: index,
-                              ),
-                              child: AudioPlayerScreen(),
-                            ),
+                            builder:
+                                (_) => ChangeNotifierProvider(
+                                  create:
+                                      (_) => AudioPlayerProvider(
+                                        audioPaths: audioPaths,
+                                        currentIndex: index,
+                                      ),
+                                  child: AudioPlayerScreen(),
+                                ),
                           ),
                         );
                       },
-                    );
-                  },
-                ),
+                    ),
+                  );
+                },
+              ),
     );
   }
 }
