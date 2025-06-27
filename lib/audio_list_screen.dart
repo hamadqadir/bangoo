@@ -79,6 +79,17 @@ class _AudioListScreenState extends State<AudioListScreen> {
                         song.artist ?? "Unknown Artist",
                         style: TextStyle(color: Colors.white70),
                       ),
+
+                      leading: QueryArtworkWidget(
+                          controller: _audioQuery,
+                          id: song.id,
+                          type: ArtworkType.AUDIO,
+                          nullArtworkWidget: Icon(
+                            Icons.music_note,
+                            color: Colors.white,
+                            size: 40.0,
+                          ),
+                      ),
                       onTap: () {
                         Navigator.push(
                           context,
@@ -89,6 +100,7 @@ class _AudioListScreenState extends State<AudioListScreen> {
                                       (_) => AudioPlayerProvider(
                                         audioPaths: audioPaths,
                                         currentIndex: index,
+                                        songs: songs,
                                       ),
                                   child: AudioPlayerScreen(),
                                 ),

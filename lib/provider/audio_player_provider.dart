@@ -3,10 +3,12 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:audio_waveforms/audio_waveforms.dart';
+import 'package:on_audio_query/on_audio_query.dart';
 
 class AudioPlayerProvider extends ChangeNotifier {
   final List<String> audioPaths;
   int currentIndex;
+  final List<SongModel> songs;
 
   final AudioPlayer _player = AudioPlayer();
   // final PlayerController _waveformController = PlayerController();
@@ -14,6 +16,7 @@ class AudioPlayerProvider extends ChangeNotifier {
   bool isLoading = false;
   bool get isPlaying => _player.playing;
   String get currentTitle => audioPaths[currentIndex].split('/').last;
+  int get currentSongId => songs[currentIndex].id;
 
   AudioPlayer get player => _player;
   // PlayerController get waveformController => _waveformController;
@@ -27,6 +30,7 @@ class AudioPlayerProvider extends ChangeNotifier {
   AudioPlayerProvider({
     required this.audioPaths,
     required this.currentIndex,
+    required this.songs,
   }) {
     _init();
   }
