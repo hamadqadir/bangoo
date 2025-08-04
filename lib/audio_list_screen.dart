@@ -1,46 +1,53 @@
+import 'package:bangoo/album_show_Screen.dart';
 import 'package:flutter/material.dart';
 import 'package:on_audio_query/on_audio_query.dart';
-import 'package:permission_handler/permission_handler.dart';
-import 'audio_player_screen.dart';
-import 'provider/audio_player_provider.dart';
-import 'package:provider/provider.dart';
 
-class AudioListScreen extends StatefulWidget {
+
+class FolderListScreen extends StatefulWidget {
   @override
-  State<AudioListScreen> createState() => _AudioListScreenState();
+  _FolderListScreenState createState() => _FolderListScreenState();
 }
 
-class _AudioListScreenState extends State<AudioListScreen> {
+class _FolderListScreenState extends State<FolderListScreen> {
   final OnAudioQuery _audioQuery = OnAudioQuery();
-  List<SongModel> songs = [];
+  Map<String, List<SongModel>> folderSongs = {};
   bool isLoading = true;
 
-  // ✅ Provide valid audio file paths
-  List<String> get audioPaths => songs.map((s) => s.data).toList();
+
+  
+Future<Map<String, List<SongModel>>> fetchSongsGroupedByFolder() async {
+  List<SongModel> allSongs = await _audioQuery.querySongs();
+
+  // Group songs by folder (directory)
+  Map<String, List<SongModel>> folderMap = {};
+
+  for (var song in allSongs) {
+    final folderPath = song.data.substring(0, song.data.lastIndexOf('/'));
+
+    if (!folderMap.containsKey(folderPath)) {
+      folderMap[folderPath] = [];
+    }
+
+    folderMap[folderPath]!.add(song);
+  }
+
+  return folderMap;
+}
+
+
 
   @override
   void initState() {
     super.initState();
-    requestPermissionAndFetchSongs();
+    loadFolders();
   }
 
-  Future<void> requestPermissionAndFetchSongs() async {
-    bool permissionStatus = await _audioQuery.permissionsStatus();
-
-    if (!permissionStatus) {
-      permissionStatus = await _audioQuery.permissionsRequest();
-      if (!permissionStatus) {
-        print('User denied permission');
-        return;
-      }
+  Future<void> loadFolders() async {
+    if (!await _audioQuery.permissionsStatus()) {
+      if (!await _audioQuery.permissionsRequest()) return;
     }
 
-    try {
-      songs = await _audioQuery.querySongs();
-      print('Found ${songs.length} songs');
-    } catch (e) {
-      print('Error querying songs: $e');
-    }
+    folderSongs = await fetchSongsGroupedByFolder();
 
     setState(() {
       isLoading = false;
@@ -49,68 +56,44 @@ class _AudioListScreenState extends State<AudioListScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final folders = folderSongs.keys.toList();
+
     return Scaffold(
       backgroundColor: Colors.black,
       appBar: AppBar(
-        title: Text('Audio Files'),
+        title: Text('Folders'),
+         actions: [
+          IconButton(onPressed: (){}, icon:  Icon(Icons.download, color: Colors.white)),
+        ],
+        backgroundColor: Colors.orange,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.vertical(bottom: Radius.circular(20)),
         ),
-        scrolledUnderElevation: 0.1,
-        backgroundColor: Colors.orange,
       ),
-      body:
-          isLoading
-              ? Center(child: CircularProgressIndicator())
-              : songs.isEmpty
-              ? Center(child: Text("No audio files found"))
-              : ListView.builder(
-                itemCount: songs.length,
-                itemBuilder: (context, index) {
-                  final song = songs[index];
-                  return Container(
-                    padding: EdgeInsets.all(8.0),
-                    child: ListTile(
-                      title: Text(
-                        song.title,
-                        style: TextStyle(color: Colors.white),
-                      ),
-                      subtitle: Text(
-                        song.artist ?? "Unknown Artist",
-                        style: TextStyle(color: Colors.white70),
-                      ),
+      body: isLoading
+          ? Center(child: CircularProgressIndicator())
+          : ListView.builder(
+              itemCount: folders.length,
+              itemBuilder: (context, index) {
+                final folderPath = folders[index];
+                final folderName = folderPath.split('/').last;
+                final songs = folderSongs[folderPath]!;
 
-                      leading: QueryArtworkWidget(
-                          controller: _audioQuery,
-                          id: song.id,
-                          type: ArtworkType.AUDIO,
-                          nullArtworkWidget: Icon(
-                            Icons.music_note,
-                            color: Colors.white,
-                            size: 40.0,
-                          ),
+                return ListTile(
+                  title: Text(folderName, style: TextStyle(color: Colors.white)),
+                  subtitle: Text('${songs.length} songs', style: TextStyle(color: Colors.white70)),
+                  leading: Icon(Icons.folder, color: Colors.orange),
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => FolderSongsScreen(folderName: folderName, songs: songs),
                       ),
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder:
-                                (_) => ChangeNotifierProvider(
-                                  create:
-                                      (_) => AudioPlayerProvider(
-                                        audioPaths: audioPaths,
-                                        currentIndex: index,
-                                        songs: songs,
-                                      ),
-                                  child: AudioPlayerScreen(),
-                                ),
-                          ),
-                        );
-                      },
-                    ),
-                  );
-                },
-              ),
+                    );
+                  },
+                );
+              },
+            ),
     );
   }
 }

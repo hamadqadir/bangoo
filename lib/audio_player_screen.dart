@@ -10,7 +10,7 @@ class AudioPlayerScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final provider = Provider.of<AudioPlayerProvider>(context, listen: false);
-    final screenWidth = MediaQuery.of(context).size.width;
+    
 
     return Scaffold(
       backgroundColor: Colors.black,
@@ -24,6 +24,7 @@ class AudioPlayerScreen extends StatelessWidget {
                   fontWeight: FontWeight.w600,
                 ),
                 overflow: TextOverflow.ellipsis,
+                
               ),
         ),
         backgroundColor: Colors.orange,
